@@ -119,7 +119,9 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
 
         state.token = result.token;
         state.usuario = result.usuario;
+        state.admin = null; // Limpar admin
         localStorage.setItem('token', result.token);
+        localStorage.setItem('userType', 'user');
 
         document.getElementById('nomeUsuario').textContent = result.usuario.nome;
         mostrarTela('telaPrincipal');
@@ -156,7 +158,9 @@ document.getElementById('formLoginAdmin').addEventListener('submit', async (e) =
 
         state.token = result.token;
         state.admin = result.admin;
+        state.usuario = null; // Limpar usuário normal
         localStorage.setItem('token', result.token);
+        localStorage.setItem('userType', 'admin');
 
         mostrarTela('telaGestaoUsuarios');
         carregarUsuarios();
@@ -169,7 +173,9 @@ document.getElementById('formLoginAdmin').addEventListener('submit', async (e) =
 window.voltarLogin = () => {
     state.token = null;
     state.admin = null;
+    state.usuario = null;
     localStorage.removeItem('token');
+    localStorage.removeItem('userType');
     mostrarTela('telaLogin');
 };
 
@@ -281,7 +287,9 @@ document.getElementById('formAlterarSenhaAdmin').addEventListener('submit', asyn
 document.getElementById('btnSair').addEventListener('click', () => {
     state.token = null;
     state.usuario = null;
+    state.admin = null;
     localStorage.removeItem('token');
+    localStorage.removeItem('userType');
     mostrarTela('telaLogin');
 });
 

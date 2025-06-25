@@ -17,7 +17,7 @@ const verificarSenha = async (senha, hash) => {
 // Gerar token JWT
 const gerarToken = (usuario) => {
     return jwt.sign(
-        { id: usuario.id, nome: usuario.nome },
+        { id: usuario.id, nome: usuario.nome, tipo: usuario.tipo },
         JWT_SECRET,
         { expiresIn: '24h' }
     );
