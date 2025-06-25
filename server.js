@@ -305,18 +305,46 @@ app.post('/api/aih', verificarToken, async (req, res) => {
     try {
         const { numero_aih, valor_inicial, competencia, atendimentos } = req.body;
         
+        console.log('📝 Dados recebidos no servidor:', { 
+            numero_aih, 
+            valor_inicial, 
+            competencia, 
+            atendimentos, 
+            tipo_atendimentos: typeof atendimentos,
+            eh_array: Array.isArray(atendimentos)
+        });
+        
         // Validar dados de entrada
         if (!numero_aih || !valor_inicial || !competencia) {
+            console.log('❌ Dados obrigatórios faltando');
             return res.status(400).json({ error: 'Dados obrigatórios não informados' });
         }
         
-        if (!atendimentos || !Array.isArray(atendimentos) || atendimentos.length === 0) {
+        // Processar atendimentos - aceitar tanto array quanto string
+        let atendimentosProcessados = [];
+        
+        if (typeof atendimentos === 'string') {
+            // Se vier como string, separar por vírgula ou quebra de linha
+            atendimentosProcessados = atendimentos.split(/[,\n\r]/)
+                .map(a => a.trim())
+                .filter(a => a);
+        } else if (Array.isArray(atendimentos)) {
+            atendimentosProcessados = atendimentos
+                .map(a => String(a).trim())
+                .filter(a => a);
+        }
+        
+        console.log('🔄 Atendimentos processados:', atendimentosProcessados);
+        
+        if (atendimentosProcessados.length === 0) {
+            console.log('❌ Nenhum atendimento válido encontrado');
             return res.status(400).json({ error: 'Pelo menos um número de atendimento deve ser informado' });
         }
         
         // Verificar se já existe
         const existe = await get('SELECT id FROM aihs WHERE numero_aih = ?', [numero_aih]);
         if (existe) {
+            console.log('❌ AIH já existe');
             return res.status(400).json({ error: 'AIH já cadastrada' });
         }
         
@@ -327,13 +355,14 @@ app.post('/api/aih', verificarToken, async (req, res) => {
             [numero_aih, parseFloat(valor_inicial), parseFloat(valor_inicial), competencia, req.usuario.id]
         );
         
-        // Inserir atendimentos
-        for (const atend of atendimentos) {
+        // Inserir atendimentos processados
+        for (const atend of atendimentosProcessados) {
             if (atend && atend.trim()) {
                 await run(
                     'INSERT INTO atendimentos (aih_id, numero_atendimento) VALUES (?, ?)',
                     [result.id, atend.trim()]
                 );
+                console.log(`📋 Atendimento inserido: ${atend.trim()}`);
             }
         }
         
@@ -346,11 +375,11 @@ app.post('/api/aih', verificarToken, async (req, res) => {
         
         await logAcao(req.usuario.id, `Cadastrou AIH ${numero_aih}`);
         
-        console.log(`✅ AIH ${numero_aih} cadastrada com sucesso - ID: ${result.id}`);
+        console.log(`✅ AIH ${numero_aih} cadastrada com sucesso - ID: ${result.id} - Atendimentos: ${atendimentosProcessados.length}`);
         
-        res.json({ success: true, id: result.id, numero_aih });
+        res.json({ success: true, id: result.id, numero_aih, atendimentos_inseridos: atendimentosProcessados.length });
     } catch (err) {
-        console.error('Erro ao cadastrar AIH:', err);
+        console.error('❌ Erro ao cadastrar AIH:', err);
         res.status(500).json({ error: err.message });
     }
 });

@@ -736,9 +736,18 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
         }
     }
 
-    const atendimentos = Array.from(document.querySelectorAll('.atendimento-input'))
-        .map(input => input.value.trim())
-        .filter(val => val);
+    // Corrigir coleta dos atendimentos - garantir que sejam coletados corretamente
+    const atendimentosInputs = document.querySelectorAll('.atendimento-input');
+    const atendimentos = [];
+    
+    atendimentosInputs.forEach(input => {
+        const valor = input.value.trim();
+        if (valor) {
+            atendimentos.push(valor);
+        }
+    });
+
+    console.log('Atendimentos coletados:', atendimentos); // Debug
 
     if (atendimentos.length === 0) {
         alert('Informe pelo menos um número de atendimento');
@@ -750,8 +759,10 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
             numero_aih: numeroAIH,
             valor_inicial: parseFloat(document.getElementById('cadastroValor').value),
             competencia: document.getElementById('cadastroCompetencia').value,
-            atendimentos
+            atendimentos: atendimentos // Garantir que seja array
         };
+
+        console.log('Dados enviados:', dados); // Debug
 
         const result = await api('/aih', {
             method: 'POST',
@@ -760,11 +771,27 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
 
         alert('AIH cadastrada com sucesso!');
 
+        // Limpar formulário após sucesso
+        document.getElementById('formCadastroAIH').reset();
+        
+        // Limpar container de atendimentos e adicionar um campo limpo
+        const container = document.getElementById('atendimentosContainer');
+        container.innerHTML = '';
+        const novoInput = document.createElement('input');
+        novoInput.type = 'text';
+        novoInput.className = 'atendimento-input';
+        novoInput.placeholder = 'Número do atendimento';
+        container.appendChild(novoInput);
+
+        // Repreencher competência padrão
+        document.getElementById('cadastroCompetencia').value = getCompetenciaAtual();
+
         // Buscar a AIH recém-cadastrada
         const aih = await api(`/aih/${dados.numero_aih}`);
         state.aihAtual = aih;
         mostrarInfoAIH(aih);
     } catch (err) {
+        console.error('Erro detalhado:', err);
         alert('Erro ao cadastrar: ' + err.message);
     }
 });
