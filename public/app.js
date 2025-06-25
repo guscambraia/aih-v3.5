@@ -698,6 +698,7 @@ document.getElementById('formBuscarAIH').addEventListener('submit', async (e) =>
         if (err.message.includes('não encontrada')) {
             // Nova AIH
             document.getElementById('cadastroNumeroAIH').value = numero;
+            document.getElementById('cadastroNumeroAIH').removeAttribute('readonly');
             state.telaAnterior = 'telaInformarAIH';
             mostrarTela('telaCadastroAIH');
             // Garantir que sempre tenha pelo menos um campo de atendimento
@@ -777,6 +778,10 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
 
         // Limpar formulário após sucesso
         document.getElementById('formCadastroAIH').reset();
+        
+        // Limpar especificamente o campo do número da AIH
+        document.getElementById('cadastroNumeroAIH').value = '';
+        document.getElementById('cadastroNumeroAIH').removeAttribute('readonly');
         
         // Limpar container de atendimentos e adicionar um campo limpo
         const container = document.getElementById('atendimentosContainer');
