@@ -736,18 +736,22 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
         }
     }
 
-    // Corrigir coleta dos atendimentos - garantir que sejam coletados corretamente
-    const atendimentosInputs = document.querySelectorAll('.atendimento-input');
+    // Coleta CORRIGIDA dos atendimentos
+    const atendimentosInputs = document.querySelectorAll('#atendimentosContainer .atendimento-input');
     const atendimentos = [];
     
-    atendimentosInputs.forEach(input => {
-        const valor = input.value.trim();
-        if (valor) {
+    // Usar for...of para garantir que percorra todos os elementos
+    for (const input of atendimentosInputs) {
+        const valor = input.value ? input.value.trim() : '';
+        if (valor && valor.length > 0) {
             atendimentos.push(valor);
+            console.log('Atendimento adicionado:', valor);
         }
-    });
+    }
 
-    console.log('Atendimentos coletados:', atendimentos); // Debug
+    console.log('Total de inputs encontrados:', atendimentosInputs.length);
+    console.log('Atendimentos coletados:', atendimentos);
+    console.log('Quantidade de atendimentos:', atendimentos.length);
 
     if (atendimentos.length === 0) {
         alert('Informe pelo menos um número de atendimento');
@@ -759,10 +763,10 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
             numero_aih: numeroAIH,
             valor_inicial: parseFloat(document.getElementById('cadastroValor').value),
             competencia: document.getElementById('cadastroCompetencia').value,
-            atendimentos: atendimentos // Garantir que seja array
+            atendimentos: atendimentos
         };
 
-        console.log('Dados enviados:', dados); // Debug
+        console.log('Dados que serão enviados:', JSON.stringify(dados, null, 2));
 
         const result = await api('/aih', {
             method: 'POST',

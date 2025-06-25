@@ -320,7 +320,7 @@ app.post('/api/aih', verificarToken, async (req, res) => {
             return res.status(400).json({ error: 'Dados obrigatórios não informados' });
         }
         
-        // Processar atendimentos - aceitar tanto array quanto string
+        // Processar atendimentos - aceitar array, string ou objeto
         let atendimentosProcessados = [];
         
         if (typeof atendimentos === 'string') {
@@ -330,6 +330,11 @@ app.post('/api/aih', verificarToken, async (req, res) => {
                 .filter(a => a);
         } else if (Array.isArray(atendimentos)) {
             atendimentosProcessados = atendimentos
+                .map(a => String(a).trim())
+                .filter(a => a);
+        } else if (typeof atendimentos === 'object' && atendimentos !== null) {
+            // Se vier como objeto (ex: {'0': '120'}), extrair os valores
+            atendimentosProcessados = Object.values(atendimentos)
                 .map(a => String(a).trim())
                 .filter(a => a);
         }
