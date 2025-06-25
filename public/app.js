@@ -2115,61 +2115,89 @@ const getTipoDescricao = (tipo) => {
 
 // Adiciona a função exportarHistoricoMovimentacoes
 window.exportarHistoricoMovimentacoes = async (formato) => {
-    if (!state.aihAtual || !state.aihAtual.movimentacoes) {
-        alert('Não há histórico de movimentações para exportar.');
+    if (!state.aihAtual || !state.aihAtual.id) {
+        alert('Não há AIH selecionada para exportar.');
         return;
     }
 
     try {
-        // Preparar dados para exportação
-        const dadosExportacao = state.aihAtual.movimentacoes.map(mov => ({
-            Data: new Date(mov.data_movimentacao).toLocaleDateString('pt-BR'),
-            Tipo: getTipoDescricao(mov.tipo),
-            Status: getStatusDescricao(mov.status_aih),
-            Valor: mov.valor_conta ? mov.valor_conta.toFixed(2) : '0,00',
-            Competencia: mov.competencia || '-',
-            Observações: mov.observacoes || '-'
-        }));
-
-        // Converter para o formato desejado
-        let blob;
-        let filename = `historico-movimentacoes-aih-${state.aihAtual.numero_aih}-${new Date().toISOString().split('T')[0]}`;
-
+        // Para CSV, usar método local simples
         if (formato === 'csv') {
-            // CSV
-            const csvRows = [
-                Object.keys(dadosExportacao[0]).join(','), // Header
-                ...dadosExportacao.map(row => Object.values(row).join(',')) // Data rows
-            ];
-            const csvString = csvRows.join('\n');
-            blob = new Blob([csvString], { type: 'text/csv' });
-            filename += '.csv';
+            if (!state.aihAtual.movimentacoes || state.aihAtual.movimentacoes.length === 0) {
+                alert('Não há movimentações para exportar.');
+                return;
+            }
+
+            // Preparar dados para CSV
+            const dadosCSV = state.aihAtual.movimentacoes.map(mov => ({
+                Data: new Date(mov.data_movimentacao).toLocaleDateString('pt-BR'),
+                Tipo: getTipoDescricao(mov.tipo),
+                Status: getStatusDescricao(mov.status_aih),
+                Valor: mov.valor_conta ? `R$ ${mov.valor_conta.toFixed(2)}` : 'R$ 0,00',
+                Competencia: mov.competencia || '-',
+                'Prof. Medicina': mov.prof_medicina || '-',
+                'Prof. Enfermagem': mov.prof_enfermagem || '-',
+                'Prof. Fisioterapia': mov.prof_fisioterapia || '-',
+                'Prof. Bucomaxilo': mov.prof_bucomaxilo || '-',
+                Observações: mov.observacoes || '-'
+            }));
+
+            // Criar CSV
+            const csvHeaders = Object.keys(dadosCSV[0]).join(',');
+            const csvRows = dadosCSV.map(row => 
+                Object.values(row).map(val => `"${String(val).replace(/"/g, '""')}"`).join(',')
+            );
+            const csvContent = [csvHeaders, ...csvRows].join('\n');
+
+            // Download CSV
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv; charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `historico-movimentacoes-AIH-${state.aihAtual.numero_aih}-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
         } else if (formato === 'xlsx') {
-            // XLSX (Excel) - Requer uma biblioteca como SheetJS (não incluída aqui)
-            // Como não podemos incluir bibliotecas externas, simulamos a exportação para CSV
-            // e alertamos o usuário.
-            alert('Exportação para Excel (xlsx) não suportada nesta versão. Será exportado em formato CSV.');
-            const csvRows = [
-                Object.keys(dadosExportacao[0]).join(','), // Header
-                ...dadosExportacao.map(row => Object.values(row).join(',')) // Data rows
-            ];
-            const csvString = csvRows.join('\n');
-            blob = new Blob([csvString], { type: 'text/csv' });
-            filename += '.csv';
+            // Para Excel, usar endpoint do servidor
+            const response = await fetch(`/api/aih/${state.aihAtual.id}/movimentacoes/export/xlsx`, {
+                headers: {
+                    'Authorization': `Bearer ${state.token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao exportar para Excel');
+            }
+
+            // Obter nome do arquivo do cabeçalho ou usar padrão
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = `historico-movimentacoes-AIH-${state.aihAtual.numero_aih}-${new Date().toISOString().split('T')[0]}.xls`;
+            
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename=(.+)/);
+                if (filenameMatch) {
+                    filename = filenameMatch[1].replace(/"/g, '');
+                }
+            }
+
+            // Download do Excel
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
 
         } else {
-            alert('Formato de exportação não suportado.');
+            alert('Formato de exportação não suportado. Use "csv" ou "xlsx".');
             return;
         }
-
-        // Criar link para download
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
 
     } catch (error) {
         console.error('Erro ao exportar histórico de movimentações:', error);
