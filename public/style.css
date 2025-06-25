@@ -1530,36 +1530,39 @@ tr:last-child {
     z-index: 1;
 }
 
-/* Footer da tela de login - melhorado */
+/* Footer da tela de login - corrigido */
 .login-footer {
-    position: absolute;
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
     text-align: center;
     z-index: 1;
-    width: auto;
-    max-width: 90%;
+    width: 100%;
+    padding: 0 1rem;
 }
 
 .login-footer p {
-    color: var(--white);
+    color: var(--primary);
     font-size: 0.875rem;
-    margin: 0.2rem 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    line-height: 1.4;
+    margin: 0.15rem 0;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+    line-height: 1.3;
+    font-weight: 500;
 }
 
 .login-footer p:first-child {
     font-weight: 600;
     font-size: 1rem;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
+    color: var(--primary-dark);
 }
 
 .login-footer p:last-child {
     font-size: 0.75rem;
-    opacity: 0.85;
+    opacity: 0.9;
     font-weight: 400;
+    color: var(--primary);
 }
 
 /* Removido o rodapé da página principal */
