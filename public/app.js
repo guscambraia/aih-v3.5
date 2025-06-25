@@ -740,7 +740,7 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
     // Coleta CORRIGIDA dos atendimentos
     const atendimentosInputs = document.querySelectorAll('#atendimentosContainer .atendimento-input');
     const atendimentos = [];
-    
+
     // Usar for...of para garantir que percorra todos os elementos
     for (const input of atendimentosInputs) {
         const valor = input.value ? input.value.trim() : '';
@@ -778,11 +778,11 @@ document.getElementById('formCadastroAIH').addEventListener('submit', async (e) 
 
         // Limpar formulário após sucesso
         document.getElementById('formCadastroAIH').reset();
-        
+
         // Limpar especificamente o campo do número da AIH
         document.getElementById('cadastroNumeroAIH').value = '';
         document.getElementById('cadastroNumeroAIH').removeAttribute('readonly');
-        
+
         // Limpar container de atendimentos e adicionar um campo limpo
         const container = document.getElementById('atendimentosContainer');
         container.innerHTML = '';
@@ -859,22 +859,22 @@ const carregarDadosMovimentacao = async () => {
                         <div class="status-item">
                             <div class="status-numero">2</div>
                             <div>
-                                <strong style="color: #c2410c;">Ativa com aprovação indireta</strong>
-                                <p>AIH aprovada, mas com pequenos ajustes ou observações que não impedem a liberação.</p>
+                                <strong style="color: #d97706;">Ativa com aprovação indireta</strong>
+                                <p>AIH aprovada pela Auditoria SUS, porém com glosas/pendências ou observações que não impedem a liberação no momento. Passível de reavaliação e recurso pelo Hospital.</p>
                             </div>
                         </div>
                         <div class="status-item">
                             <div class="status-numero">3</div>
                             <div>
-                                <strong style="color: #b91c1c;">Ativa em discussão</strong>
-                                <p>AIH em processo de análise, com pendências que precisam ser resolvidas antes da aprovação.</p>
+                                <strong style="color: #dc2626;">Ativa em discussão</strong>
+                                <p>AIH em processo de análise entre as partes, com pendências e/ou glosas que precisam ser resolvidas antes da aprovação.</p>
                             </div>
                         </div>
                         <div class="status-item">
                             <div class="status-numero">4</div>
                             <div>
-                                <strong style="color: #5b21b6;">Finalizada após discussão</strong>
-                                <p>AIH finalizada após processo de discussão e resolução de pendências. Processo encerrado.</p>
+                                <strong style="color: #059669;">Finalizada após discussão</strong>
+                                <p>AIH finalizada após processo de discussão e resolução de pendências. Concordância entre as partes. Processo encerrado.</p>
                             </div>
                         </div>
                     </div>
@@ -2175,7 +2175,7 @@ window.exportarHistoricoMovimentacoes = async (formato) => {
             // Obter nome do arquivo do cabeçalho ou usar padrão
             const contentDisposition = response.headers.get('content-disposition');
             let filename = `historico-movimentacoes-AIH-${state.aihAtual.numero_aih}-${new Date().toISOString().split('T')[0]}.xls`;
-            
+
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename=(.+)/);
                 if (filenameMatch) {
