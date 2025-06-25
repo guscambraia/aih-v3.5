@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { get, run } = require('./database');
+const { get, run, all } = require('./database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chave-secreta-aih-2024';
 

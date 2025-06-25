@@ -166,7 +166,7 @@ document.getElementById('formLoginAdmin').addEventListener('submit', async (e) =
 });
 
 // Voltar para login principal
-const voltarLogin = () => {
+window.voltarLogin = () => {
     state.token = null;
     state.admin = null;
     localStorage.removeItem('token');
