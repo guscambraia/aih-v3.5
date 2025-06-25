@@ -1601,14 +1601,19 @@ tr:last-child {
 }
 
 /* Melhorar aparência das telas de admin */
-#telaAdminUsuarios .login-container,
-#telaGestaoUsuarios {
+#telaAdminUsuarios .login-container {
     background: var(--gray-50);
+}
+
+#telaAdminUsuarios .login-container::before {
+    height: 30%; /* Reduzir altura da faixa azul */
 }
 
 #telaAdminUsuarios h1,
 #telaAdminUsuarios h2 {
-    color: var(--primary);
+    color: var(--white);
+    z-index: 2;
+    position: relative;
 }
 
 #telaAdminUsuarios form {
@@ -1617,6 +1622,13 @@ tr:last-child {
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
+    z-index: 2;
+    position: relative;
+    margin-top: 2rem;
+}
+
+#telaGestaoUsuarios {
+    background: var(--gray-50);
 }
 
 .glosa-item {
