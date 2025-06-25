@@ -700,6 +700,8 @@ document.getElementById('formBuscarAIH').addEventListener('submit', async (e) =>
             document.getElementById('cadastroNumeroAIH').value = numero;
             state.telaAnterior = 'telaInformarAIH';
             mostrarTela('telaCadastroAIH');
+            // Garantir que sempre tenha pelo menos um campo de atendimento
+            setTimeout(garantirCampoAtendimento, 100);
         } else {
             alert('Erro: ' + err.message);
         }
@@ -1132,7 +1134,7 @@ document.getElementById('formMovimentacao').addEventListener('submit', async (e)
     // 1. Verificar se há mudança de status
     const novoStatus = parseInt(document.getElementById('movStatus').value);
     const statusAtual = state.aihAtual.status;
-    
+
     if (novoStatus !== statusAtual) {
         const confirmarMudanca = await mostrarModal(
             'Confirmação de Mudança de Status',
@@ -1484,21 +1486,21 @@ window.gerarRelatorio = async (tipo) => {
         const dataInicio = document.getElementById('relatorioDataInicio')?.value || '';
         const dataFim = document.getElementById('relatorioDataFim')?.value || '';
         const competencia = document.getElementById('relatorioCompetencia')?.value || '';
-        
+
         const filtros = {
             data_inicio: dataInicio,
             data_fim: dataFim,
             competencia: competencia
         };
-        
+
         // Usar POST para enviar filtros
         const response = await api(`/relatorios/${tipo}`, {
             method: 'POST',
             body: JSON.stringify(filtros)
         });
-        
+
         const container = document.getElementById('resultadoRelatorio');
-        
+
         // Mostrar período selecionado
         let periodoTexto = '';
         if (competencia) {
@@ -1548,7 +1550,7 @@ window.gerarRelatorio = async (tipo) => {
                     </div>
                 `;
                 break;
-                
+
             case 'aihs-profissional-periodo':
                 conteudo = `
                     <div class="relatorio-content">
@@ -1581,7 +1583,7 @@ window.gerarRelatorio = async (tipo) => {
                     </div>
                 `;
                 break;
-                
+
             case 'glosas-profissional-periodo':
                 conteudo = `
                     <div class="relatorio-content">
@@ -1616,7 +1618,7 @@ window.gerarRelatorio = async (tipo) => {
                     </div>
                 `;
                 break;
-                
+
             case 'valores-glosas-periodo':
                 const dados = response.resultado;
                 conteudo = `
@@ -1669,7 +1671,7 @@ window.gerarRelatorio = async (tipo) => {
                     </div>
                 `;
                 break;
-                
+
             case 'estatisticas-periodo':
                 const stats = response.resultado;
                 const totalStats = stats.total_aihs || 1;
@@ -1975,13 +1977,13 @@ window.exportarRelatorio = async (tipo) => {
         const dataInicio = document.getElementById('relatorioDataInicio')?.value || '';
         const dataFim = document.getElementById('relatorioDataFim')?.value || '';
         const competencia = document.getElementById('relatorioCompetencia')?.value || '';
-        
+
         const filtros = {
             data_inicio: dataInicio,
             data_fim: dataFim,
             competencia: competencia
         };
-        
+
         // Verificar se é um relatório que suporta filtros por período
         const relatoriosComFiltros = [
             'tipos-glosa-periodo', 
@@ -1990,9 +1992,9 @@ window.exportarRelatorio = async (tipo) => {
             'valores-glosas-periodo', 
             'estatisticas-periodo'
         ];
-        
+
         let response;
-        
+
         if (relatoriosComFiltros.includes(tipo)) {
             // Usar POST para relatórios com filtros
             response = await fetch(`/api/relatorios/${tipo}/export`, {
@@ -2019,7 +2021,7 @@ window.exportarRelatorio = async (tipo) => {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        
+
         // Nome do arquivo com período se aplicável
         let nomeArquivo = `relatorio-${tipo}-${new Date().toISOString().split('T')[0]}`;
         if (competencia) {
@@ -2028,7 +2030,7 @@ window.exportarRelatorio = async (tipo) => {
             nomeArquivo += `-${dataInicio}-a-${dataFim}`;
         }
         nomeArquivo += '.xls';
-        
+
         a.href = url;
         a.download = nomeArquivo;
         document.body.appendChild(a);
@@ -2136,5 +2138,17 @@ window.exportarHistoricoMovimentacoes = async (formato) => {
     } catch (error) {
         console.error('Erro ao exportar histórico de movimentações:', error);
         alert('Erro ao exportar histórico de movimentações: ' + error.message);
+    }
+};
+
+// Função para garantir que sempre tenha pelo menos um campo de atendimento
+const garantirCampoAtendimento = () => {
+    const container = document.getElementById('atendimentosContainer');
+    if (container.children.length === 0) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'atendimento-input';
+        input.placeholder = 'Número do atendimento';
+        container.appendChild(input);
     }
 };

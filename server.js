@@ -305,6 +305,15 @@ app.post('/api/aih', verificarToken, async (req, res) => {
     try {
         const { numero_aih, valor_inicial, competencia, atendimentos } = req.body;
         
+        // Validar dados de entrada
+        if (!numero_aih || !valor_inicial || !competencia) {
+            return res.status(400).json({ error: 'Dados obrigatórios não informados' });
+        }
+        
+        if (!atendimentos || !Array.isArray(atendimentos) || atendimentos.length === 0) {
+            return res.status(400).json({ error: 'Pelo menos um número de atendimento deve ser informado' });
+        }
+        
         // Verificar se já existe
         const existe = await get('SELECT id FROM aihs WHERE numero_aih = ?', [numero_aih]);
         if (existe) {
@@ -315,27 +324,33 @@ app.post('/api/aih', verificarToken, async (req, res) => {
         const result = await run(
             `INSERT INTO aihs (numero_aih, valor_inicial, valor_atual, competencia, usuario_cadastro_id, status) 
              VALUES (?, ?, ?, ?, ?, 3)`,
-            [numero_aih, valor_inicial, valor_inicial, competencia, req.usuario.id]
+            [numero_aih, parseFloat(valor_inicial), parseFloat(valor_inicial), competencia, req.usuario.id]
         );
         
         // Inserir atendimentos
         for (const atend of atendimentos) {
-            await run(
-                'INSERT INTO atendimentos (aih_id, numero_atendimento) VALUES (?, ?)',
-                [result.id, atend]
-            );
+            if (atend && atend.trim()) {
+                await run(
+                    'INSERT INTO atendimentos (aih_id, numero_atendimento) VALUES (?, ?)',
+                    [result.id, atend.trim()]
+                );
+            }
         }
         
-        // Primeira movimentação (entrada SUS)
+        // Primeira movimentação (entrada SUS) - OBRIGATÓRIA para nova AIH
         await run(
-            `INSERT INTO movimentacoes (aih_id, tipo, usuario_id, valor_conta, competencia, status_aih, observacoes) 
-             VALUES (?, 'entrada_sus', ?, ?, ?, 3, ?)`,
-            [result.id, req.usuario.id, valor_inicial, competencia, 'Entrada inicial no sistema']
+            `INSERT INTO movimentacoes (aih_id, tipo, usuario_id, valor_conta, competencia, status_aih, observacoes, data_movimentacao) 
+             VALUES (?, 'entrada_sus', ?, ?, ?, 3, ?, CURRENT_TIMESTAMP)`,
+            [result.id, req.usuario.id, parseFloat(valor_inicial), competencia, 'Entrada inicial da AIH na Auditoria SUS']
         );
         
         await logAcao(req.usuario.id, `Cadastrou AIH ${numero_aih}`);
-        res.json({ success: true, id: result.id });
+        
+        console.log(`✅ AIH ${numero_aih} cadastrada com sucesso - ID: ${result.id}`);
+        
+        res.json({ success: true, id: result.id, numero_aih });
     } catch (err) {
+        console.error('Erro ao cadastrar AIH:', err);
         res.status(500).json({ error: err.message });
     }
 });
