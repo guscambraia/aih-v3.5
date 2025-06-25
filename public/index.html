@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Auditoria de AIH</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Tela Login -->
+        <div id="telaLogin" class="tela ativa">
+            <div class="login-container">
+                <h1>Sistema de Gestão de AIH</h1>
+                <h2>Controle de Auditoria</h2>
+                <form id="formLogin">
+                    <input type="text" id="loginUsuario" placeholder="Usuário" required>
+                    <input type="password" id="loginSenha" placeholder="Senha" required>
+                    <button type="submit">Entrar</button>
+                    <a href="#" id="linkCadastrar">Cadastrar novo usuário</a>
+                </form>
+                <footer class="login-footer">
+                    <p>Desenvolvido por Gustavo Cambraia</p>
+                    <p>All rights reserved</p>
+                    <p>Versão atual: 3.4</p>
+                </footer>
+            </div>
+        </div>
+
+        <!-- Substitua a seção do dashboard na TELA PRINCIPAL pelo código abaixo -->
+
+<!-- Tela Principal com menu no topo -->
+<div id="telaPrincipal" class="tela">
+    <header>
+        <h1>Sistema de Controle de AIH</h1>
+        <div class="user-info">
+            <span id="nomeUsuario"></span>
+            <button id="btnSair">Sair</button>
+        </div>
+    </header>
+
+    <!-- Menu Principal no topo -->
+    <div class="menu-principal">
+        <button class="menu-btn" id="btnInformarAIH">
+            <span class="icon">📝</span>
+            <span>Informar AIH</span>
+        </button>
+        <button class="menu-btn" id="btnBuscarAIH">
+            <span class="icon">🔍</span>
+            <span>Buscar AIH</span>
+        </button>
+        <button class="menu-btn" id="btnBackup">
+            <span class="icon">💾</span>
+            <span>Backup/Exportar</span>
+        </button>
+        <button class="menu-btn" id="btnConfiguracoes">
+            <span class="icon">⚙️</span>
+            <span>Configurações</span>
+        </button>
+        <button class="menu-btn" id="btnRelatorios">
+            <span class="icon">📊</span>
+            <span>Relatórios</span>
+        </button>
+    </div>
+
+    <!-- O seletor de competência será inserido dinamicamente aqui pelo JavaScript -->
+
+    <div class="dashboard">
+        <!-- Os cards serão inseridos dinamicamente pelo JavaScript -->
+    </div>
+
+    <!-- O resumo financeiro será inserido dinamicamente aqui pelo JavaScript -->
+    
+    <!-- Rodapé da tela principal -->
+    <footer class="main-footer">
+        <p>Desenvolvido por Gustavo Cambraia</p>
+        <p>All rights reserved</p>
+        <p>Versão atual: 3.4</p>
+    </footer>
+</div>
+        <!-- Tela Informar AIH -->
+        <div id="telaInformarAIH" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaPrincipal()">← Voltar</button>
+                <h2>Informar AIH</h2>
+            </header>
+            <div class="container">
+                <form id="formBuscarAIH">
+                    <label>Número da AIH:</label>
+                    <input type="text" id="numeroBuscarAIH" required>
+                    <button type="submit">Buscar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tela Cadastro AIH -->
+        <div id="telaCadastroAIH" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaAnterior()">← Voltar</button>
+                <h2>Cadastrar Nova AIH</h2>
+            </header>
+            <div class="container">
+                <form id="formCadastroAIH">
+                    <label>Número da AIH:</label>
+                    <input type="text" id="cadastroNumeroAIH" required readonly>
+
+                    <label>Números de Atendimento:</label>
+                    <div id="atendimentosContainer">
+                        <input type="text" class="atendimento-input" placeholder="Número do atendimento">
+                    </div>
+                    <button type="button" id="btnAddAtendimento">+ Adicionar Atendimento</button>
+
+                    <label>Competência (MM/AAAA):</label>
+                    <input type="text" id="cadastroCompetencia" pattern="\d{2}/\d{4}" placeholder="12/2024" required>
+
+                    <label>Valor Inicial:</label>
+                    <input type="number" id="cadastroValor" step="0.01" required>
+
+                    <button type="submit">Cadastrar AIH</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tela Informações AIH -->
+        <div id="telaInfoAIH" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaPrincipal()">← Voltar</button>
+                <h2>Informações da AIH</h2>
+            </header>
+            <div class="container">
+                <div id="infoAIHContent">
+                    <!-- Conteúdo dinâmico -->
+                </div>
+                <button id="btnNovaMovimentacao" class="btn-primary">Nova Movimentação</button>
+            </div>
+        </div>
+
+        <!-- Tela Movimentação -->
+        <div id="telaMovimentacao" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaAnterior()">← Voltar</button>
+                <h2>Nova Movimentação</h2>
+            </header>
+            <div class="container">
+                <!-- Status atual da AIH destacado -->
+                <div id="statusAtualAIH"></div>
+
+                <!-- Lembrete sobre os status -->
+                <div id="lembreteStatus"></div>
+
+                <!-- Área de explicação da movimentação -->
+                <div id="explicacaoMovimentacao"></div>
+
+                <form id="formMovimentacao">
+                    <label>Status da AIH:</label>
+                    <select id="movStatus" required>
+                        <option value="1">1 - Finalizada com aprovação direta</option>
+                        <option value="2">2 - Ativa com aprovação indireta</option>
+                        <option value="3">3 - Ativa em discussão</option>
+                        <option value="4">4 - Finalizada após discussão</option>
+                    </select>
+
+                    <label>Tipo de Movimentação:</label>
+                    <select id="movTipo" required>
+                        <option value="entrada_sus">Entrada na Auditoria SUS</option>
+                        <option value="saida_hospital">Saída para Auditoria Hospital</option>
+                    </select>
+
+                    <label>Competência:</label>
+                    <input type="text" id="movCompetencia" pattern="\d{2}/\d{4}">
+
+                    <label>Valor Atual da Conta:</label>
+                    <input type="number" id="movValor" step="0.01" required>
+
+                    <h3>Profissionais Auditores:</h3>
+                    <select id="movProfMedicina">
+                        <option value="">Selecione - Medicina</option>
+                    </select>
+                    <select id="movProfEnfermagem">
+                        <option value="">Selecione - Enfermagem</option>
+                    </select>
+                    <select id="movProfFisioterapia">
+                        <option value="">Selecione - Fisioterapia</option>
+                    </select>
+                    <select id="movProfBucomaxilo">
+                        <option value="">Selecione - Cirurgião Bucomaxilo</option>
+                    </select>
+
+                    <label>Observações:</label>
+                    <textarea id="movObservacoes" rows="3" placeholder="Observações sobre esta movimentação (opcional)"></textarea>
+
+                    <div class="glosas-section">
+                        <h3>Glosas/Pendências</h3>
+                        <div id="listaGlosas"></div>
+                        <button type="button" id="btnGerenciarGlosas">Gerenciar Glosas</button>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" id="btnCancelarMovimentacao" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">Salvar Movimentação</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tela Pendências -->
+        <div id="telaPendencias" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaAnterior()">← Voltar</button>
+                <h2>Gerenciar Pendências/Glosas</h2>
+            </header>
+            <div class="container">
+                <div id="glosasAtuais"></div>
+
+                <h3>Adicionar Nova Pendência/Glosa</h3>
+                <form id="formNovaGlosa">
+                    <input type="text" id="glosaLinha" placeholder="Linha da pendência/glosa" required>
+                    <select id="glosaTipo" required>
+                        <option value="">Selecione o tipo de pendência/glosa</option>
+                    </select>
+                    <select id="glosaProfissional" required>
+                        <option value="">Selecione o profissional</option>
+                    </select>
+                    <input type="number" id="glosaQuantidade" placeholder="Quantidade" min="1" value="1" required>
+                    <button type="submit">Adicionar Pendência/Glosa</button>
+                </form>
+
+                <button id="btnSalvarGlosas" class="btn-primary">Salvar Pendências e Voltar</button>
+            </div>
+        </div>
+
+        <!-- Tela Pesquisa -->
+        <div id="telaPesquisa" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaPrincipal()">← Voltar</button>
+                <h2>Pesquisar AIH</h2>
+            </header>
+            <div class="container">
+                <form id="formPesquisa">
+                    <div class="filtros-grid">
+                        <div>
+                            <label>Número AIH:</label>
+                            <input type="text" id="pesquisaNumeroAIH" placeholder="Buscar por número">
+                        </div>
+
+                        <div>
+                            <label>Status:</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" value="1"> Finalizada com aprovação direta</label>
+                                <label><input type="checkbox" value="2"> Ativa com aprovação indireta</label>
+                                <label><input type="checkbox" value="3"> Ativa em discussão</label>
+                                <label><input type="checkbox" value="4"> Finalizada após discussão</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label>Período:</label>
+                            <input type="date" id="pesquisaDataInicio">
+                            <input type="date" id="pesquisaDataFim">
+                        </div>
+
+                        <div>
+                            <label>Competência:</label>
+                            <input type="text" id="pesquisaCompetencia" pattern="\d{2}/\d{4}" placeholder="MM/AAAA">
+                        </div>
+
+                        <div>
+                            <label>Valor Mínimo:</label>
+                            <input type="number" id="pesquisaValorMin" step="0.01" placeholder="R$ 0,00">
+                        </div>
+
+                        <div>
+                            <label>Valor Máximo:</label>
+                            <input type="number" id="pesquisaValorMax" step="0.01" placeholder="R$ 0,00">
+                        </div>
+
+                        <div>
+                            <label>Profissional:</label>
+                            <select id="pesquisaProfissional">
+                                <option value="">Todos os profissionais</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit">Pesquisar</button>
+                </form>
+
+                <div id="resultadosPesquisa"></div>
+            </div>
+        </div>
+
+        <!-- Tela Configurações -->
+        <div id="telaConfiguracoes" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaPrincipal()">← Voltar</button>
+                <h2>Configurações</h2>
+            </header>
+            <div class="container">
+                <div class="config-section">
+                    <h3>Gerenciar Profissionais</h3>
+                    <div id="listaProfissionais"></div>
+                    <form id="formNovoProfissional">
+                        <input type="text" id="profNome" placeholder="Nome" required>
+                        <select id="profEspecialidade" required>
+                            <option value="Medicina">Medicina</option>
+                            <option value="Enfermagem">Enfermagem</option>
+                            <option value="Fisioterapia">Fisioterapia</option>
+                            <option value="Bucomaxilo">Cirurgião Bucomaxilo</option>
+                        </select>
+                        <button type="submit">Adicionar Profissional</button>
+                    </form>
+                </div>
+
+                <div class="config-section">
+                    <h3>Gerenciar Tipos de Pendências/Glosas</h3>
+                    <div id="listaTiposGlosa"></div>
+                    <form id="formNovoTipoGlosa">
+                        <input type="text" id="tipoGlosaDescricao" placeholder="Descrição do tipo de pendência/glosa" required>
+                        <button type="submit">Adicionar Tipo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Relatórios -->
+        <div id="telaRelatorios" class="tela">
+            <header>
+                <button class="btn-voltar" onclick="voltarTelaPrincipal()">← Voltar</button>
+                <h2>Relatórios e Análises</h2>
+            </header>
+            <div class="container">
+                <!-- Filtros de Período -->
+                <div class="filtros-relatorio">
+                    <h3>Filtros de Período</h3>
+                    <div class="filtros-grid">
+                        <div>
+                            <label>Data Início:</label>
+                            <input type="date" id="relatorioDataInicio">
+                        </div>
+                        <div>
+                            <label>Data Fim:</label>
+                            <input type="date" id="relatorioDataFim">
+                        </div>
+                        <div>
+                            <label>Competência:</label>
+                            <input type="text" id="relatorioCompetencia" placeholder="MM/AAAA">
+                        </div>
+                        <div style="display: flex; align-items: end;">
+                            <button onclick="limparFiltrosRelatorio()" style="background: #64748b; padding: 0.75rem 1.5rem;">
+                                Limpar Filtros
+                            </button>
+                        </div>
+                    </div>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
+                        💡 Deixe os filtros vazios para gerar relatórios de todos os períodos. Use competência OU período de datas.
+                    </p>
+                </div>
+
+                <!-- Relatórios por Período -->
+                <div class="secao-relatorios">
+                    <h3>📅 Relatórios por Período</h3>
+                    <div class="relatorios-grid">
+                        <button onclick="gerarRelatorio('tipos-glosa-periodo')" class="relatorio-btn">
+                            <span class="relatorio-icon">📊</span>
+                            <h3>Tipos de Glosa Mais Comuns</h3>
+                            <p>Glosas mais frequentes no período selecionado</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('aihs-profissional-periodo')" class="relatorio-btn">
+                            <span class="relatorio-icon">🏥</span>
+                            <h3>AIHs Auditadas por Profissional</h3>
+                            <p>Quantas AIHs cada profissional auditou</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('glosas-profissional-periodo')" class="relatorio-btn">
+                            <span class="relatorio-icon">📋</span>
+                            <h3>Glosas por Profissional</h3>
+                            <p>Glosas identificadas por cada auditor no período</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('valores-glosas-periodo')" class="relatorio-btn">
+                            <span class="relatorio-icon">💰</span>
+                            <h3>Análise Financeira de Glosas</h3>
+                            <p>Valores das glosas e diferenças inicial/final</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('estatisticas-periodo')" class="relatorio-btn">
+                            <span class="relatorio-icon">📈</span>
+                            <h3>Estatísticas do Período</h3>
+                            <p>Resumo completo do período selecionado</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Relatórios Gerais -->
+                <div class="secao-relatorios">
+                    <h3>📊 Relatórios Gerais</h3>
+                    <div class="relatorios-grid">
+                        <button onclick="gerarRelatorio('acessos')" class="relatorio-btn">
+                            <span class="relatorio-icon">👥</span>
+                            <h3>Acessos ao Sistema</h3>
+                            <p>Histórico de logins dos usuários</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('glosas-profissional')" class="relatorio-btn">
+                            <span class="relatorio-icon">📋</span>
+                            <h3>Glosas por Profissional (Geral)</h3>
+                            <p>Todas as glosas por profissional</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('aihs-profissional')" class="relatorio-btn">
+                            <span class="relatorio-icon">🏥</span>
+                            <h3>AIHs por Profissional (Geral)</h3>
+                            <p>Todas as AIHs auditadas por profissional</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('aprovacoes')" class="relatorio-btn">
+                            <span class="relatorio-icon">✅</span>
+                            <h3>Estatísticas de Aprovações</h3>
+                            <p>Distribuição geral dos status das AIHs</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('tipos-glosa')" class="relatorio-btn">
+                            <span class="relatorio-icon">📊</span>
+                            <h3>Tipos de Glosa (Geral)</h3>
+                            <p>Frequência geral dos tipos de glosas</p>
+                        </button>
+
+                        <button onclick="gerarRelatorio('analise-preditiva')" class="relatorio-btn">
+                            <span class="relatorio-icon">🔮</span>
+                            <h3>Análise Preditiva</h3>
+                            <p>Tendências e previsões</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="resultadoRelatorio"></div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <h3 id="modalTitulo"></h3>
+                <p id="modalMensagem"></p>
+                <div class="modal-buttons">
+                    <button id="modalBtnSim">Sim</button>
+                    <button id="modalBtnNao">Não</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
