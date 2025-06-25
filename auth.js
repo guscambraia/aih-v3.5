@@ -60,25 +60,73 @@ const login = async (nome, senha) => {
     };
 };
 
-// Cadastrar usuário
-const cadastrarUsuario = async (nome, senha) => {
-    const usuarioExiste = await get('SELECT id FROM usuarios WHERE nome = ?', [nome]);
+// Cadastrar usuário (apenas por admin)
+const cadastrarUsuario = async (nome, matricula, senha) => {
+    const usuarioExiste = await get('SELECT id FROM usuarios WHERE nome = ? OR matricula = ?', [nome, matricula]);
     
     if (usuarioExiste) {
-        throw new Error('Usuário já existe');
+        throw new Error('Usuário ou matrícula já existe');
     }
     
     const senhaHash = await hashSenha(senha);
     const result = await run(
-        'INSERT INTO usuarios (nome, senha_hash) VALUES (?, ?)',
-        [nome, senhaHash]
+        'INSERT INTO usuarios (nome, matricula, senha_hash) VALUES (?, ?, ?)',
+        [nome, matricula, senhaHash]
     );
     
-    return { id: result.id, nome };
+    return { id: result.id, nome, matricula };
+};
+
+// Login de administrador
+const loginAdmin = async (usuario, senha) => {
+    const admin = await get('SELECT * FROM administradores WHERE usuario = ?', [usuario]);
+    
+    if (!admin) {
+        throw new Error('Administrador não encontrado');
+    }
+    
+    const senhaValida = await verificarSenha(senha, admin.senha_hash);
+    
+    if (!senhaValida) {
+        throw new Error('Senha incorreta');
+    }
+    
+    return {
+        token: gerarToken({ id: admin.id, nome: admin.usuario, tipo: 'admin' }),
+        admin: { id: admin.id, usuario: admin.usuario }
+    };
+};
+
+// Alterar senha do administrador
+const alterarSenhaAdmin = async (novaSenha) => {
+    const senhaHash = await hashSenha(novaSenha);
+    await run(
+        'UPDATE administradores SET senha_hash = ?, ultima_alteracao = CURRENT_TIMESTAMP WHERE usuario = ?',
+        [senhaHash, 'admin']
+    );
+    return true;
+};
+
+// Listar todos os usuários
+const listarUsuarios = async () => {
+    return await all('SELECT id, nome, matricula, criado_em FROM usuarios ORDER BY nome');
+};
+
+// Excluir usuário
+const excluirUsuario = async (id) => {
+    const result = await run('DELETE FROM usuarios WHERE id = ?', [id]);
+    if (result.changes === 0) {
+        throw new Error('Usuário não encontrado');
+    }
+    return true;
 };
 
 module.exports = {
     verificarToken,
     login,
-    cadastrarUsuario
+    cadastrarUsuario,
+    loginAdmin,
+    alterarSenhaAdmin,
+    listarUsuarios,
+    excluirUsuario
 };

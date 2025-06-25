@@ -129,24 +129,151 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
     }
 });
 
-// Cadastrar usuário
-document.getElementById('linkCadastrar').addEventListener('click', async (e) => {
+// Link para gerenciar usuários
+document.getElementById('linkGerenciarUsuarios').addEventListener('click', (e) => {
+    e.preventDefault();
+    mostrarTela('telaAdminUsuarios');
+});
+
+// Voltar para login
+document.getElementById('linkVoltarLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    mostrarTela('telaLogin');
+});
+
+// Login de administrador
+document.getElementById('formLoginAdmin').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const nome = prompt('Nome de usuário:');
-    if (!nome) return;
+    try {
+        const usuario = document.getElementById('adminUsuario').value;
+        const senha = document.getElementById('adminSenha').value;
 
-    const senha = prompt('Senha:');
-    if (!senha) return;
+        const result = await api('/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ usuario, senha })
+        });
+
+        state.token = result.token;
+        state.admin = result.admin;
+        localStorage.setItem('token', result.token);
+
+        mostrarTela('telaGestaoUsuarios');
+        carregarUsuarios();
+    } catch (err) {
+        alert('Erro no login de administrador: ' + err.message);
+    }
+});
+
+// Voltar para login principal
+const voltarLogin = () => {
+    state.token = null;
+    state.admin = null;
+    localStorage.removeItem('token');
+    mostrarTela('telaLogin');
+};
+
+// Carregar lista de usuários
+const carregarUsuarios = async () => {
+    try {
+        const response = await api('/admin/usuarios');
+        const container = document.getElementById('listaUsuarios');
+
+        container.innerHTML = response.usuarios.map(u => `
+            <div class="glosa-item">
+                <div>
+                    <strong>${u.nome}</strong> - Matrícula: ${u.matricula}
+                    <br>
+                    <span style="color: #64748b; font-size: 0.875rem;">
+                        Cadastrado em: ${new Date(u.criado_em).toLocaleDateString('pt-BR')}
+                    </span>
+                </div>
+                <button onclick="excluirUsuario(${u.id}, '${u.nome}')" class="btn-danger" style="padding: 0.5rem 1rem;">
+                    Excluir
+                </button>
+            </div>
+        `).join('') || '<p>Nenhum usuário cadastrado</p>';
+    } catch (err) {
+        console.error('Erro ao carregar usuários:', err);
+    }
+};
+
+// Excluir usuário
+window.excluirUsuario = async (id, nome) => {
+    const confirmar = await mostrarModal(
+        'Excluir Usuário',
+        `Tem certeza que deseja excluir o usuário "${nome}"? Esta ação não pode ser desfeita.`
+    );
+
+    if (!confirmar) return;
 
     try {
-        await api('/cadastrar', {
-            method: 'POST',
-            body: JSON.stringify({ nome, senha })
-        });
-        alert('Usuário cadastrado com sucesso!');
+        await api(`/admin/usuarios/${id}`, { method: 'DELETE' });
+        alert('Usuário excluído com sucesso!');
+        carregarUsuarios();
     } catch (err) {
-        alert('Erro ao cadastrar: ' + err.message);
+        alert('Erro ao excluir usuário: ' + err.message);
+    }
+};
+
+// Adicionar novo usuário
+document.getElementById('formNovoUsuario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    try {
+        const dados = {
+            nome: document.getElementById('novoUsuarioNome').value,
+            matricula: document.getElementById('novoUsuarioMatricula').value,
+            senha: document.getElementById('novoUsuarioSenha').value
+        };
+
+        await api('/admin/usuarios', {
+            method: 'POST',
+            body: JSON.stringify(dados)
+        });
+
+        alert('Usuário cadastrado com sucesso!');
+        document.getElementById('formNovoUsuario').reset();
+        carregarUsuarios();
+    } catch (err) {
+        alert('Erro ao cadastrar usuário: ' + err.message);
+    }
+});
+
+// Alterar senha do administrador
+document.getElementById('formAlterarSenhaAdmin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const novaSenha = document.getElementById('novaSenhaAdmin').value;
+    const confirmarSenha = document.getElementById('confirmarSenhaAdmin').value;
+
+    if (novaSenha !== confirmarSenha) {
+        alert('As senhas não coincidem!');
+        return;
+    }
+
+    if (novaSenha.length < 4) {
+        alert('A senha deve ter pelo menos 4 caracteres!');
+        return;
+    }
+
+    const confirmar = await mostrarModal(
+        'Alterar Senha',
+        'Tem certeza que deseja alterar a senha do administrador?'
+    );
+
+    if (!confirmar) return;
+
+    try {
+        await api('/admin/alterar-senha', {
+            method: 'POST',
+            body: JSON.stringify({ novaSenha })
+        });
+
+        alert('Senha do administrador alterada com sucesso!');
+        document.getElementById('formAlterarSenhaAdmin').reset();
+    } catch (err) {
+        alert('Erro ao alterar senha: ' + err.message);
     }
 });
 

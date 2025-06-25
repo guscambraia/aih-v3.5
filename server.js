@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const XLSX = require('xlsx');
 const { initDB, run, get, all } = require('./database');
-const { verificarToken, login, cadastrarUsuario } = require('./auth');
+const { verificarToken, login, cadastrarUsuario, loginAdmin, alterarSenhaAdmin, listarUsuarios, excluirUsuario } = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,11 +33,66 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.post('/api/cadastrar', async (req, res) => {
+// Login de administrador
+app.post('/api/admin/login', async (req, res) => {
     try {
-        const { nome, senha } = req.body;
-        await cadastrarUsuario(nome, senha);
-        res.json({ success: true, message: 'Usuário criado' });
+        const { usuario, senha } = req.body;
+        const result = await loginAdmin(usuario, senha);
+        res.json(result);
+    } catch (err) {
+        res.status(401).json({ error: err.message });
+    }
+});
+
+// Listar usuários (apenas admin)
+app.get('/api/admin/usuarios', verificarToken, async (req, res) => {
+    try {
+        if (req.usuario.tipo !== 'admin') {
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+        const usuarios = await listarUsuarios();
+        res.json({ usuarios });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Cadastrar usuário (apenas admin)
+app.post('/api/admin/usuarios', verificarToken, async (req, res) => {
+    try {
+        if (req.usuario.tipo !== 'admin') {
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+        const { nome, matricula, senha } = req.body;
+        const usuario = await cadastrarUsuario(nome, matricula, senha);
+        res.json({ success: true, usuario });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Excluir usuário (apenas admin)
+app.delete('/api/admin/usuarios/:id', verificarToken, async (req, res) => {
+    try {
+        if (req.usuario.tipo !== 'admin') {
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+        await excluirUsuario(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Alterar senha do administrador
+app.post('/api/admin/alterar-senha', verificarToken, async (req, res) => {
+    try {
+        if (req.usuario.tipo !== 'admin') {
+            return res.status(403).json({ error: 'Acesso negado' });
+        }
+        const { novaSenha } = req.body;
+        await alterarSenhaAdmin(novaSenha);
+        res.json({ success: true });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }

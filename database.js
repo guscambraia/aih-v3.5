@@ -16,8 +16,23 @@ const initDB = () => {
         db.run(`CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT UNIQUE NOT NULL,
+            matricula TEXT UNIQUE NOT NULL,
             senha_hash TEXT NOT NULL,
             criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        // Adicionar coluna matricula se não existir (para bancos existentes)
+        db.run(`ALTER TABLE usuarios ADD COLUMN matricula TEXT`, (err) => {
+            // Ignora erro se coluna já existe
+        });
+
+        // Administradores
+        db.run(`CREATE TABLE IF NOT EXISTS administradores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario TEXT UNIQUE NOT NULL,
+            senha_hash TEXT NOT NULL,
+            criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ultima_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
         // AIHs
@@ -107,6 +122,15 @@ const initDB = () => {
             ('Procedimento não autorizado'),
             ('Falta de documentação'),
             ('Divergência de valores')`);
+
+        // Criar administrador padrão (senha: admin)
+        const bcrypt = require('bcryptjs');
+        bcrypt.hash('admin', 10, (err, hash) => {
+            if (!err) {
+                db.run(`INSERT OR IGNORE INTO administradores (usuario, senha_hash) VALUES (?, ?)`, 
+                    ['admin', hash]);
+            }
+        });
 
         // Criar índices para otimização
         db.run(`CREATE INDEX IF NOT EXISTS idx_aih_numero ON aihs(numero_aih)`);
