@@ -82,6 +82,7 @@ body {
     min-height: 100vh;
     background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
     position: relative;
+    padding: 2rem 1rem;
 }
 
 .login-container::before {
@@ -90,7 +91,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 50%;
+    height: 40%;
     background: var(--primary);
     z-index: 0;
 }
@@ -100,7 +101,8 @@ body {
     font-size: 2.5rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    z-index: 1;
+    z-index: 2;
+    position: relative;
     text-align: center;
 }
 
@@ -108,18 +110,21 @@ body {
     color: var(--gray-200);
     font-size: 1.25rem;
     font-weight: 400;
-    margin-bottom: 3rem;
-    z-index: 1;
+    margin-bottom: 2rem;
+    z-index: 2;
+    position: relative;
+    text-align: center;
 }
 
-#formLogin {
+#formLogin, #formLoginAdmin {
     background: var(--white);
     padding: 3rem;
     border-radius: 12px;
     box-shadow: var(--shadow-lg);
     width: 100%;
     max-width: 420px;
-    z-index: 1;
+    z-index: 2;
+    position: relative;
     animation: slideIn 0.5s ease;
 }
 
@@ -167,6 +172,8 @@ body {
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
+    z-index: 2;
+    position: relative;
 }
 
 #linkGerenciarUsuarios:hover {
@@ -182,6 +189,8 @@ body {
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
+    z-index: 2;
+    position: relative;
 }
 
 #linkVoltarLogin:hover {
@@ -526,6 +535,29 @@ header h2 {
 
     .resumo-cards {
         grid-template-columns: 1fr;
+    }
+
+    /* Responsividade para telas de login */
+    .login-container {
+        padding: 1rem;
+    }
+
+    .login-container h1 {
+        font-size: 2rem;
+    }
+
+    .login-container h2 {
+        font-size: 1rem;
+    }
+
+    #formLogin, #formLoginAdmin {
+        padding: 2rem;
+        max-width: 100%;
+    }
+
+    .login-footer {
+        position: relative;
+        margin-top: 2rem;
     }
 }
 
@@ -1547,12 +1579,12 @@ tr:last-child {
 
 /* Footer da tela de login - corrigido */
 .login-footer {
-    position: fixed;
+    position: absolute;
     bottom: 1rem;
     left: 0;
     right: 0;
     text-align: center;
-    z-index: 1;
+    z-index: 2;
     width: 100%;
     padding: 0 1rem;
 }
@@ -1606,7 +1638,7 @@ tr:last-child {
 }
 
 #telaAdminUsuarios .login-container::before {
-    height: 30%; /* Reduzir altura da faixa azul */
+    height: 35%; /* Altura adequada da faixa azul */
 }
 
 #telaAdminUsuarios h1,
@@ -1616,15 +1648,17 @@ tr:last-child {
     position: relative;
 }
 
-#telaAdminUsuarios form {
+#telaAdminUsuarios #formLoginAdmin {
     background: var(--white);
-    padding: 2rem;
+    padding: 3rem;
     border-radius: 12px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-lg);
     border: 1px solid var(--gray-200);
     z-index: 2;
     position: relative;
-    margin-top: 2rem;
+    margin-top: 1rem;
+    width: 100%;
+    max-width: 420px;
 }
 
 #telaGestaoUsuarios {
