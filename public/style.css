@@ -1530,63 +1530,36 @@ tr:last-child {
     z-index: 1;
 }
 
-/* Footer da tela de login */
+/* Footer da tela de login - melhorado */
 .login-footer {
     position: absolute;
-    bottom: 2rem;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
     z-index: 1;
-    width: 100%;
+    width: auto;
+    max-width: 90%;
 }
 
 .login-footer p {
-    color: var(--primary);
+    color: var(--white);
     font-size: 0.875rem;
-    margin: 0.25rem 0;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+    margin: 0.2rem 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    line-height: 1.4;
 }
 
 .login-footer p:first-child {
     font-weight: 600;
     font-size: 1rem;
+    margin-bottom: 0.3rem;
 }
 
 .login-footer p:last-child {
-    font-size: 0.8rem;
-    opacity: 0.9;
-}
-
-/* Footer da tela principal */
-.main-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--white);
-    border-top: 1px solid var(--gray-200);
-    padding: 1rem 2rem;
-    text-align: center;
-    z-index: 100;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.main-footer p {
-    color: var(--primary);
     font-size: 0.75rem;
-    margin: 0.125rem 0;
+    opacity: 0.85;
+    font-weight: 400;
 }
 
-.main-footer p:first-child {
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.main-footer p:last-child {
-    font-size: 0.7rem;
-    opacity: 0.8;
-}
-
-/* Ajustar padding-bottom do body quando o footer está visível */
-#telaPrincipal {
-    padding-bottom: 80px;
-}
+/* Removido o rodapé da página principal */
