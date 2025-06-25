@@ -4,17 +4,49 @@ const path = require('path');
 const XLSX = require('xlsx');
 const { initDB, run, get, all } = require('./database');
 const { verificarToken, login, cadastrarUsuario, loginAdmin, alterarSenhaAdmin, listarUsuarios, excluirUsuario } = require('./auth');
+const { rateLimitMiddleware, validateInput } = require('./middleware');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+// Middlewares de segurança e otimização
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? false : true,
+    credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' })); // Limitar tamanho do payload
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Aplicar rate limiting globalmente
+app.use(rateLimitMiddleware);
+
+// Validação de entrada
+app.use('/api', validateInput);
+
+// Headers de segurança
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+
 app.use(express.static('public'));
 
 // Inicializar banco
 initDB();
+
+// Inicializar sistema de manutenção
+const { scheduleMaintenance } = require('./cleanup');
+scheduleMaintenance();
+
+// Inicializar monitoramento
+const { logPerformance } = require('./monitor');
+setTimeout(logPerformance, 30000); // Log inicial após 30s
 
 // Middleware para logs
 const logAcao = async (usuarioId, acao) => {

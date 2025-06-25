@@ -3,10 +3,15 @@ const jwt = require('jsonwebtoken');
 const { get, run, all } = require('./database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chave-secreta-aih-2024';
+const BCRYPT_ROUNDS = 10; // Define the number of bcrypt rounds
 
 // Criar hash de senha
 const hashSenha = async (senha) => {
-    return await bcrypt.hash(senha, 10);
+    // Validar força da senha
+    if (senha.length < 6) {
+        throw new Error('Senha deve ter pelo menos 6 caracteres');
+    }
+    return await bcrypt.hash(senha, BCRYPT_ROUNDS);
 };
 
 // Verificar senha
@@ -26,7 +31,7 @@ const gerarToken = (usuario) => {
 // Verificar token
 const verificarToken = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    
+
     if (!token) {
         return res.status(401).json({ error: 'Token não fornecido' });
     }
@@ -43,17 +48,17 @@ const verificarToken = (req, res, next) => {
 // Login
 const login = async (nome, senha) => {
     const usuario = await get('SELECT * FROM usuarios WHERE nome = ?', [nome]);
-    
+
     if (!usuario) {
         throw new Error('Usuário não encontrado');
     }
-    
+
     const senhaValida = await verificarSenha(senha, usuario.senha_hash);
-    
+
     if (!senhaValida) {
         throw new Error('Senha incorreta');
     }
-    
+
     return {
         token: gerarToken(usuario),
         usuario: { id: usuario.id, nome: usuario.nome }
@@ -63,34 +68,34 @@ const login = async (nome, senha) => {
 // Cadastrar usuário (apenas por admin)
 const cadastrarUsuario = async (nome, matricula, senha) => {
     const usuarioExiste = await get('SELECT id FROM usuarios WHERE nome = ? OR matricula = ?', [nome, matricula]);
-    
+
     if (usuarioExiste) {
         throw new Error('Usuário ou matrícula já existe');
     }
-    
+
     const senhaHash = await hashSenha(senha);
     const result = await run(
         'INSERT INTO usuarios (nome, matricula, senha_hash) VALUES (?, ?, ?)',
         [nome, matricula, senhaHash]
     );
-    
+
     return { id: result.id, nome, matricula };
 };
 
 // Login de administrador
 const loginAdmin = async (usuario, senha) => {
     const admin = await get('SELECT * FROM administradores WHERE usuario = ?', [usuario]);
-    
+
     if (!admin) {
         throw new Error('Administrador não encontrado');
     }
-    
+
     const senhaValida = await verificarSenha(senha, admin.senha_hash);
-    
+
     if (!senhaValida) {
         throw new Error('Senha incorreta');
     }
-    
+
     return {
         token: gerarToken({ id: admin.id, nome: admin.usuario, tipo: 'admin' }),
         admin: { id: admin.id, usuario: admin.usuario }

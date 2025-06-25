@@ -10,10 +10,21 @@ if (!fs.existsSync(dbDir)) {
 
 const dbPath = path.join(__dirname, 'db', 'aih.db');
 
-// Criar conexão
+// Criar conexão com configurações otimizadas
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error('Erro ao conectar:', err);
     else console.log('Conectado ao banco SQLite');
+});
+
+// Configurações de performance do SQLite
+db.serialize(() => {
+    // Configurações de performance
+    db.run("PRAGMA journal_mode = WAL");           // Write-Ahead Logging para melhor concorrência
+    db.run("PRAGMA synchronous = NORMAL");        // Balance entre performance e segurança
+    db.run("PRAGMA cache_size = 10000");          // Cache de 10MB
+    db.run("PRAGMA temp_store = MEMORY");         // Usar memória para tabelas temporárias
+    db.run("PRAGMA mmap_size = 268435456");       // 256MB de memory-mapped I/O
+    db.run("PRAGMA optimize");                    // Otimizar estatísticas do banco
 });
 
 // Inicializar tabelas
@@ -139,21 +150,39 @@ const initDB = () => {
             }
         });
 
-        // Criar índices para otimização
-        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_numero ON aihs(numero_aih)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_status ON aihs(status)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_competencia ON aihs(competencia)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_valor_atual ON aihs(valor_atual)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_criado_em ON aihs(criado_em)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_movimentacoes_aih ON movimentacoes(aih_id)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_movimentacoes_tipo ON movimentacoes(tipo)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_movimentacoes_competencia ON movimentacoes(competencia)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_movimentacoes_data ON movimentacoes(data_movimentacao)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_aih ON glosas(aih_id)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_ativa ON glosas(ativa)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_atendimentos_aih ON atendimentos(aih_id)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_logs_usuario ON logs_acesso(usuario_id)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_logs_data ON logs_acesso(data_hora)`);
+        // Criar índices otimizados para alto volume
+        // Índices únicos (já otimizados automaticamente)
+        db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_aih_numero ON aihs(numero_aih)`);
+        db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_nome ON usuarios(nome)`);
+        db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_matricula ON usuarios(matricula)`);
+        
+        // Índices compostos para consultas frequentes
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_status_competencia ON aihs(status, competencia)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_competencia_criado ON aihs(competencia, criado_em DESC)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_status_valor ON aihs(status, valor_atual)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_aih_usuario_criado ON aihs(usuario_cadastro_id, criado_em DESC)`);
+        
+        // Índices para movimentações (consultas frequentes)
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_aih_data ON movimentacoes(aih_id, data_movimentacao DESC)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_tipo_competencia ON movimentacoes(tipo, competencia)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_competencia_data ON movimentacoes(competencia, data_movimentacao DESC)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_usuario_data ON movimentacoes(usuario_id, data_movimentacao DESC)`);
+        
+        // Índices para glosas
+        db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_aih_ativa ON glosas(aih_id, ativa)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_tipo_prof ON glosas(tipo, profissional)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_glosas_prof_ativa ON glosas(profissional, ativa, criado_em DESC)`);
+        
+        // Índices para relatórios e consultas de auditoria
+        db.run(`CREATE INDEX IF NOT EXISTS idx_atendimentos_numero ON atendimentos(numero_atendimento)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_logs_usuario_data ON logs_acesso(usuario_id, data_hora DESC)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_logs_acao_data ON logs_acesso(acao, data_hora DESC)`);
+        
+        // Índices para texto (FTS seria ideal, mas usando LIKE otimizado)
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_medicina ON movimentacoes(prof_medicina) WHERE prof_medicina IS NOT NULL`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_enfermagem ON movimentacoes(prof_enfermagem) WHERE prof_enfermagem IS NOT NULL`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_fisio ON movimentacoes(prof_fisioterapia) WHERE prof_fisioterapia IS NOT NULL`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_mov_prof_buco ON movimentacoes(prof_bucomaxilo) WHERE prof_bucomaxilo IS NOT NULL`);
         
         console.log('Banco de dados inicializado');
     });
