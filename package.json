@@ -1,12 +1,53 @@
+
 {
-  "name": "sistema-aih",
+  "name": "sistema-aih-desktop",
   "version": "1.0.0",
-  "description": "Sistema de Controle de Auditoria de AIH",
-  "main": "server.js",
+  "description": "Sistema de Controle de Auditoria de AIH - Versão Desktop",
+  "main": "electron-main.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "init-db": "node database.js"
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "build-all": "electron-builder --win --mac --linux",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.empresa.sistema-aih",
+    "productName": "Sistema AIH",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-main.js",
+      "server-desktop.js",
+      "auth.js",
+      "database.js",
+      "middleware.js",
+      "monitor.js",
+      "cleanup.js",
+      "public/**/*",
+      "node_modules/**/*",
+      "db/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -17,6 +58,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
-  }
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "author": "Gustavo Cambraia",
+  "license": "MIT"
 }
