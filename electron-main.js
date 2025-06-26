@@ -4,6 +4,11 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
+// Configurações para suprimir erros de GPU
+app.commandLine.appendSwitch('--disable-gpu');
+app.commandLine.appendSwitch('--disable-software-rasterizer');
+app.commandLine.appendSwitch('--disable-gpu-sandbox');
+
 let mainWindow;
 let serverProcess;
 const PORT = 5000;
@@ -35,7 +40,8 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
             enableRemoteModule: false,
-            webSecurity: true
+            webSecurity: true,
+            disableHardwareAcceleration: true
         },
         icon: path.join(__dirname, 'assets', 'icon.png'),
         title: 'Sistema de Controle de AIH',
@@ -73,7 +79,8 @@ function startServer() {
         env: {
             ...process.env,
             USER_DATA_PATH: userDataPath,
-            PORT: PORT
+            PORT: PORT,
+            NODE_ENV: 'desktop'
         },
         stdio: ['ignore', 'pipe', 'pipe']
     });
@@ -88,6 +95,18 @@ function startServer() {
 
     serverProcess.on('close', (code) => {
         console.log(`Server process exited with code ${code}`);
+        if (code !== 0 && code !== null) {
+            console.error('Server crashed, attempting restart...');
+            setTimeout(() => {
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    startServer();
+                }
+            }, 2000);
+        }
+    });
+
+    serverProcess.on('error', (err) => {
+        console.error('Failed to start server process:', err);
     });
 }
 
